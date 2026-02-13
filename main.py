@@ -29,7 +29,7 @@ def remote_subscribe_v3(target_pc_ip, target_pc_mac, multicast_group, iface_obj)
 
     # Create a Group Record (type 4 = CHANGE_TO_EXCLUDE_MODE, which is a "Join")
     gr = IGMPv3gr(rtype=4, maddr=multicast_group)
-    igmp = IGMPv3(type=0x22, records=[gr])
+    igmp = IGMPv3(type=0x22, grps=[gr])
 
     print(f"[*] Sending IGMPv3 Join (Report) for {target_pc_ip}...")
     sendp(eth/ip/igmp, iface=iface_obj, verbose=False)
