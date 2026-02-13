@@ -20,15 +20,19 @@ def get_multicast_mac(ip_address):
     return ':'.join(f'{b:02x}' for b in mac_bytes)
 
 def remote_subscribe_v3(target_pc_ip, target_pc_mac, multicast_group, iface_obj):
+    v3_dest_mac = "01:00:5e:00:00:16"
+    v3_dest_ip = "224.0.0.22"
+
     # IGMPv3 Reports always go to 224.0.0.22
-    eth = Ether(src=target_pc_mac, dst=get_multicast_mac(multicast_group))
-    ip = IP(src=target_pc_ip, dst="224.0.0.22", ttl=1, options=[IPOption_Router_Alert()])
+    eth = Ether(src=target_pc_mac, dst=v3_dest_mac)
+    ip = IP(src=target_pc_ip, dst=v3_dest_ip, ttl=1, options=[IPOption_Router_Alert()])
 
     # Create a Group Record (type 4 = CHANGE_TO_EXCLUDE_MODE, which is a "Join")
     gr = IGMPv3gr(rtype=4, maddr=multicast_group)
     igmp = IGMPv3(type=0x22, records=[gr])
 
-    sendp(eth/ip/igmp, iface=iface_obj)
+    print(f"[*] Sending IGMPv3 Join (Report) for {target_pc_ip}...")
+    sendp(eth/ip/igmp, iface=iface_obj, verbose=False)
 
 if __name__ == "__main__":
     show_interfaces()
