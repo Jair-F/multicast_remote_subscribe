@@ -5,7 +5,7 @@ from scapy.all import show_interfaces
 from scapy.all import sendp, Ether, IP, IPOption
 from scapy.contrib.igmp import IGMP  # IGMP is a contributed module
 from scapy.all import *
-from scapy.contrib.igmpv3 import IGMPv3, IGMPv3gr
+from scapy.contrib.igmpv3 import IGMPv3, IGMPv3gr, IGMPv3mr
 
 MULTICAST_GROUP = '239.1.1.1'
 TARGET_IP = '192.168.0.200'
@@ -27,12 +27,17 @@ def remote_subscribe_v3(target_pc_ip, target_pc_mac, multicast_group, iface_obj)
     eth = Ether(src=target_pc_mac, dst=v3_dest_mac)
     ip = IP(src=target_pc_ip, dst=v3_dest_ip, ttl=1, options=[IPOption_Router_Alert()])
 
-    # Create a Group Record (type 4 = CHANGE_TO_EXCLUDE_MODE, which is a "Join")
-    gr = IGMPv3gr(rtype=4, maddr=multicast_group)
-    igmp = IGMPv3(type=0x22, grps=[gr])
+    # We use IGMPv3 for the header and IGMPv3mr for the report body
+    igmp_header = IGMPv3(type=0x22)
+    # rtype=4 is 'CHANGE_TO_EXCLUDE_MODE' (effectively a Join)
+    group_record = IGMPv3gr(rtype=4, maddr=multicast_group)
+    igmp_body = IGMPv3mr(records=[group_record])
 
-    print(f"[*] Sending IGMPv3 Join (Report) for {target_pc_ip}...")
-    sendp(eth/ip/igmp, iface=iface_obj, verbose=False)
+    print(f"[*] Sending verified IGMPv3 Join for {target_pc_ip} to {multicast_group}...")
+    
+    # Stacking: Ether / IP / IGMPv3 Header / IGMPv3 Report Body
+    pkt = eth / ip / igmp_header / igmp_body
+    sendp(pkt, iface=iface_obj, verbose=False)
 
 if __name__ == "__main__":
     show_interfaces()
