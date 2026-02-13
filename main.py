@@ -58,7 +58,7 @@ if __name__ == "__main__":
     s.settimeout(2)
     s.bind(('0.0.0.0', 8888))
 
-    mreq = struct.pack('4sl', socket.inet_aton(MULTICAST_GROUP), socket.INADDR_ANY)
+    mreq = struct.pack('4sl', socket.inet_aton("239.1.1.2"), socket.INADDR_ANY)
     s.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
     while True:
