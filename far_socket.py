@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     while True:
         data = "sent from laptop - multicast"
-        s.sendto(data.encode('utf-8'), ('239.1.1.1', 8888))
+        s.sendto(data.encode('utf-8'), ('239.1.1.2', 8888))
         data, addr = s.recvfrom(1024)
         print(f"Received from {addr}: {data.decode()}")
 
