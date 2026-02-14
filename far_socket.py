@@ -11,6 +11,7 @@ if __name__ == "__main__":
     while True:
         data = "sent from laptop - multicast"
         s.sendto(data.encode('utf-8'), ('239.1.1.2', 8888))
+        s.sendto(data.encode('utf-8'), ('192.168.0.200', 8888))
         print(F"sent data to 239.1.1.2:8888")
         try:
             data, addr = s.recvfrom(1024)
