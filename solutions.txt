@@ -1,0 +1,11 @@
+3. The "Last Resort" Spoof: The Gateway Target
+If you want to try to trick the distant router from afar without a tunnel, you must modify your Scapy script to target the Router's IP specifically, rather than the multicast group.
+
+The Strategy:
+
+Set the IP Source to the Moxa's IP.
+
+Set the IP Destination to the Moxa's Gateway Router IP.
+
+Set the TTL to be high enough to reach that router (e.g., TTL=10).
+

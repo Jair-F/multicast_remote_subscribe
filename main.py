@@ -31,7 +31,7 @@ def remote_subscribe_v2(target_pc_ip, multicast_group, iface_obj):
     print(f"[*] Sending IGMPv2 Join (Membership Report) for {target_pc_ip} to {multicast_group}...")
 
     v2_dest_ip = multicast_group
-    eth = Ether(src=getmacbyip(target_pc_ip)) 
+    eth = Ether(src=getmacbyip(target_pc_ip))
     # Scapy can auto-calculate the dst MAC for multicast IPs if not provided,
     # but manually it's usually 01:00:5e:xx:xx:xx based on the IP.
 
